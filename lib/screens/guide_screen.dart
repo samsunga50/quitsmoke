@@ -135,7 +135,10 @@ class _GuideScreenState extends State<GuideScreen> {
           gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              colors: [Color(0xFFD66D75), Color(0XFFE29587)]),
+              colors: [
+                Color.fromARGB(255, 223, 153, 230),
+                Color.fromARGB(255, 147, 13, 141)
+              ]),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -147,7 +150,7 @@ class _GuideScreenState extends State<GuideScreen> {
                   Positioned(
                     top: (offset < 0) ? 0 : offset,
                     child: SvgPicture.asset(
-                      "assets/images/girlcigarabreak.svg",
+                      "assets/images/lungs.svg",
                       width: getProportionateScreenWidth(120),
                       fit: BoxFit.contain,
                       alignment: Alignment.topCenter,
