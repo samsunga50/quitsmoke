@@ -149,12 +149,10 @@ class _GuideScreenState extends State<GuideScreen> {
                 children: [
                   Positioned(
                     top: (offset < 0) ? 0 : offset,
-                    child: SvgPicture.asset(
-                      "assets/images/lungs.svg",
-                      width: getProportionateScreenWidth(120),
-                      fit: BoxFit.contain,
-                      alignment: Alignment.topCenter,
-                    ),
+                    child: SvgPicture.asset("assets/images/lungs.svg",
+                        width: getProportionateScreenWidth(130),
+                        fit: BoxFit.contain,
+                        alignment: Alignment.bottomCenter),
                   ),
                   Positioned(
                     top: (offset < 0)
@@ -252,6 +250,7 @@ class PreventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) {
+        print(id);
         return GuideViewScreen(id: id, lang: Platform.localeName.split("_")[0]);
       })),
       child: Ink(

@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:quitsmoke/constants.dart';
 import 'package:quitsmoke/size_config.dart';
 import 'package:quitsmoke/static/lang.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class GuideViewScreen extends StatefulWidget {
   GuideViewScreen({Key key, this.id, this.lang}) : super(key: key);
@@ -14,6 +15,13 @@ class GuideViewScreen extends StatefulWidget {
 }
 
 class _GuideViewScreenState extends State<GuideViewScreen> {
+  final FlutterTts flutterTts = FlutterTts();
+  Future _speak() async {
+    await flutterTts.setVolume(1.0);
+    await print("pressed");
+    await flutterTts.speak("stop smoking");
+  }
+
   Map actual = {};
   List<Map> content = [];
   @override
@@ -114,6 +122,13 @@ class _GuideViewScreenState extends State<GuideViewScreen> {
                 .bodyText2
                 .copyWith(fontSize: getProportionateScreenWidth(26)),
             textAlign: TextAlign.left,
+          ),
+          IconButton(
+            icon: const Icon(Icons.volume_up),
+            onPressed: () => {
+              flutterTts.speak("stop smoking"),
+              _speak(),
+            },
           ),
           new Divider(
             color: Colors.grey,

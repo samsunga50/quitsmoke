@@ -46,15 +46,14 @@ class MyApp extends StatelessWidget {
 
         if (!currentFocus.hasPrimaryFocus &&
             currentFocus.focusedChild != null) {
-          FocusManager.instance.primaryFocus.unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
         }
       },
       child: MaterialApp(
         builder: (context, child) {
           return MediaQuery(
-            data: MediaQuery.of(context).copyWith(textScaleFactor: 1),
-            child: child,
-          );
+              data: MediaQuery.of(context).copyWith(textScaleFactor: 1),
+              child: child);
         },
         debugShowCheckedModeBanner: false,
         title: 'Quit Smoking',
