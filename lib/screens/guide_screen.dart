@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:quitsmoke/comps/cigaratte.dart';
@@ -8,6 +9,8 @@ import 'package:quitsmoke/comps/getlang.dart';
 import 'package:quitsmoke/constants.dart';
 import 'package:quitsmoke/screens/guideview_screen.dart';
 import 'package:quitsmoke/static/lang.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:flutter_tts/flutter_tts.dart';
 
 import '../size_config.dart';
 
@@ -26,9 +29,13 @@ class _GuideScreenState extends State<GuideScreen> {
   double offset = 0;
   String searchtext = "";
 
+  stt.SpeechToText _speech;
+  bool _isListening = false;
+
   @override
   void initState() {
     super.initState();
+    _speech = stt.SpeechToText();
     lang = getLang();
 
     setCards();
@@ -40,9 +47,19 @@ class _GuideScreenState extends State<GuideScreen> {
     cards = [];
     langs[lang]["guide"].forEach((k, v) => {
           if (v["title"].toLowerCase().contains(searchtext.toLowerCase()))
-            cards.add(createCard(v, k))
+            cards.add(createCard(v, k)),
         });
     setState(() {});
+  }
+
+  // speak function
+  final FlutterTts flutterTts = FlutterTts();
+  Future _speak(String hell) async {
+    await flutterTts.setVolume(1.0);
+    //await print("pressed");
+    //await print(content[1]["text"].toString());
+    //await flutterTts.speak(content[1]["text"].toString());
+    await flutterTts.speak(hell);
   }
 
   @override
@@ -55,6 +72,34 @@ class _GuideScreenState extends State<GuideScreen> {
     setState(() {
       offset = (controller.hasClients) ? controller.offset : 0;
     });
+  }
+
+  void _listen() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onStatus: $val'),
+      );
+      if (available) {
+        setState(() {
+          _isListening = true;
+        });
+        _speech.listen(
+          onResult: (val) => setState(() {
+            searchtext = val.recognizedWords;
+            if (val.finalResult) {
+              _speak("Here's what i found for " + searchtext);
+            }
+            setCards();
+          }),
+        );
+      } else {
+        setState(() {
+          _isListening = false;
+        });
+        _speech.stop();
+      }
+    }
   }
 
   @override
@@ -83,19 +128,36 @@ class _GuideScreenState extends State<GuideScreen> {
                           setCards();
                         },
                         decoration: new InputDecoration(
-                          labelText: langs[lang]["guideps"]["search"],
-                          fillColor: Colors.white,
-                          border: new OutlineInputBorder(
-                            borderRadius: new BorderRadius.circular(25.0),
-                            borderSide: new BorderSide(),
-                          ),
-                          prefixIcon: Padding(
-                            padding: EdgeInsets.all(2),
-                            child: Icon(Icons.search),
-                          ),
-
-                          //fillColor: Colors.green
-                        ),
+                            labelText: langs[lang]["guideps"]["search"],
+                            fillColor: Colors.white,
+                            border: new OutlineInputBorder(
+                              borderRadius: new BorderRadius.circular(25.0),
+                              borderSide: new BorderSide(),
+                            ),
+                            prefixIcon: Padding(
+                              padding: EdgeInsets.all(2),
+                              child: Icon(Icons.search),
+                            ),
+                            suffixIcon: Padding(
+                              padding: EdgeInsets.all(2),
+                              child: AvatarGlow(
+                                animate: _isListening,
+                                glowColor: Theme.of(context).primaryColor,
+                                endRadius: 2,
+                                duration: const Duration(milliseconds: 2000),
+                                repeatPauseDuration:
+                                    const Duration(milliseconds: 100),
+                                repeat: true,
+                                child: FloatingActionButton(
+                                  onPressed: _listen,
+                                  child: Icon(_isListening
+                                      ? Icons.mic
+                                      : Icons.mic_none),
+                                ),
+                              ),
+                            )
+                            //fillColor: Colors.green
+                            ),
                       ),
                     ),
                     SizedBox(
