@@ -2,11 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:quitsmoke/notification_manager.dart';
 import 'package:quitsmoke/screens/splash_screen.dart';
 import 'package:quitsmoke/theme.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -19,7 +17,6 @@ void main() async {
 
   Intl.defaultLocale = Platform.localeName;
   initializeDateFormatting(Platform.localeName, null);
-  NotificationManager.initializeLocalNotifiations();
 
   runApp(MyApp());
 

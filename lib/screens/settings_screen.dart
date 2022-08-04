@@ -142,27 +142,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SizedBox(
                   width: 10,
                 ),
-                OutlineButton(
-                  padding: EdgeInsets.symmetric(horizontal: 50),
+                OutlinedButton(
                   onPressed: () => _pickDate(context),
                   child: Text(
                     "${langs[lang]["settings"]["change"]}",
                     textAlign: TextAlign.center,
                   ),
-                  borderSide: BorderSide(
-                      color: Theme.of(context).primaryColor, width: 2),
                 ),
               ],
             ),
             Expanded(
               child: Text(""),
             ),
-            OutlineButton(
-              padding: EdgeInsets.symmetric(horizontal: 50),
+            OutlinedButton(
               onPressed: () => saveData(),
               child: Text(langs[lang]["settings"]["save"]),
-              borderSide:
-                  BorderSide(color: Theme.of(context).primaryColor, width: 2),
             )
           ],
         ),

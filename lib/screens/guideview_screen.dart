@@ -87,7 +87,10 @@ class _GuideViewScreenState extends State<GuideViewScreen> {
         title: Text(actual["title"]),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => {
+            flutterTts.stop(),
+            Navigator.of(context).pop(),
+          },
         ),
       ),
       body: SingleChildScrollView(

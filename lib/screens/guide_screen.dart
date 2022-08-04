@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:avatar_glow/avatar_glow.dart';
+// import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:quitsmoke/comps/cigaratte.dart';
@@ -9,8 +9,10 @@ import 'package:quitsmoke/comps/getlang.dart';
 import 'package:quitsmoke/constants.dart';
 import 'package:quitsmoke/screens/guideview_screen.dart';
 import 'package:quitsmoke/static/lang.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:flutter_tts/flutter_tts.dart';
+// import 'package:speech_to_text/speech_to_text.dart' as stt;
+// import 'package:flutter_tts/flutter_tts.dart';
+import 'package:shake/shake.dart';
+import 'package:alan_voice/alan_voice.dart';
 
 import '../size_config.dart';
 
@@ -29,18 +31,82 @@ class _GuideScreenState extends State<GuideScreen> {
   double offset = 0;
   String searchtext = "";
 
-  stt.SpeechToText _speech;
-  bool _isListening = false;
+  // stt.SpeechToText _speech;
+  //stt.SpeechToText _speechG;
+  // bool _isListening = false;
+  ShakeDetector detector;
 
   @override
   void initState() {
     super.initState();
-    _speech = stt.SpeechToText();
+    AlanSetup();
+    // _speech = stt.SpeechToText();
+    //_speechG = stt.SpeechToText();
     lang = getLang();
 
     setCards();
 
     controller.addListener(onScroll);
+
+    detector = ShakeDetector.autoStart(onPhoneShake: () {
+      print("shake it daddy");
+      // print((langs[lang]["guide"].keys.toList()..shuffle()).first);
+      // Navigator.push(context, MaterialPageRoute(builder: (_) {
+      //   return GuideViewScreen(
+      //       id: (langs[lang]["guide"].keys.toList()..shuffle()).first,
+      //       lang: Platform.localeName.split("_")[0]);
+      // }));
+
+      _activate();
+    });
+
+    //_speak("Welcome to the Guide! How may i help you?");
+    //_listenG();
+  }
+
+  AlanSetup() {
+    AlanVoice.addButton(
+        "d6e8bda17acc96d68d9af832ef4073252e956eca572e1d8b807a3e2338fdd0dc/stage");
+    AlanVoice.callbacks.add((command) => _handleCommand(command.data));
+  }
+
+  _handleCommand(Map<String, dynamic> response) {
+    switch (response["command"]) {
+      case "random":
+        Navigator.push(context, MaterialPageRoute(builder: (_) {
+          return GuideViewScreen(
+              id: (langs[lang]["guide"].keys.toList()..shuffle()).first,
+              lang: Platform.localeName.split("_")[0]);
+        }));
+        break;
+      case "return":
+        Navigator.of(context).pop();
+        break;
+      case "search":
+        searchtext = response["text"];
+
+        // setCards();
+        break;
+      default:
+        print("Command was ${response["command"]}");
+        break;
+    }
+  }
+
+  /// Activate Alan Button programmatically
+  void _activate() {
+    AlanVoice.activate();
+  }
+
+  /// Deactivate Alan Button programmatically
+  void _deactivate() {
+    AlanVoice.deactivate();
+  }
+
+  /// Play any text via Alan Button
+  void _playText(String s) {
+    /// Provide text as string param
+    AlanVoice.playText(s);
   }
 
   setCards() {
@@ -53,19 +119,21 @@ class _GuideScreenState extends State<GuideScreen> {
   }
 
   // speak function
-  final FlutterTts flutterTts = FlutterTts();
-  Future _speak(String hell) async {
-    await flutterTts.setVolume(1.0);
-    //await print("pressed");
-    //await print(content[1]["text"].toString());
-    //await flutterTts.speak(content[1]["text"].toString());
-    await flutterTts.speak(hell);
-  }
+  // final FlutterTts flutterTts = FlutterTts();
+  // Future _speak(String hell) async {
+  //   await flutterTts.setVolume(1.0);
+  //   //await print("pressed");
+  //   //await print(content[1]["text"].toString());
+  //   //await flutterTts.speak(content[1]["text"].toString());
+  //   await flutterTts.speak(hell);
+  // }
 
   @override
   void dispose() {
     controller.dispose();
+    detector.stopListening();
     super.dispose();
+    _deactivate();
   }
 
   void onScroll() {
@@ -74,33 +142,62 @@ class _GuideScreenState extends State<GuideScreen> {
     });
   }
 
-  void _listen() async {
-    if (!_isListening) {
-      bool available = await _speech.initialize(
-        onStatus: (val) => print('onStatus: $val'),
-        onError: (val) => print('onStatus: $val'),
-      );
-      if (available) {
-        setState(() {
-          _isListening = true;
-        });
-        _speech.listen(
-          onResult: (val) => setState(() {
-            searchtext = val.recognizedWords;
-            if (val.finalResult) {
-              _speak("Here's what i found for " + searchtext);
-            }
-            setCards();
-          }),
-        );
-      } else {
-        setState(() {
-          _isListening = false;
-        });
-        _speech.stop();
-      }
-    }
-  }
+  // void _listen() async {
+  //   // _speak("Hello there, how can i help");
+  //   if (!_isListening) {
+  //     bool available = await _speech.initialize(
+  //       onStatus: (val) => print('onStatus: $val'),
+  //       onError: (val) => print('onStatus: $val'),
+  //     );
+  //     if (available) {
+  //       setState(() {
+  //         _isListening = true;
+  //       });
+  //       _speech.listen(
+  //         onResult: (val) => setState(() {
+  //           searchtext = val.recognizedWords;
+  //           if (val.finalResult) {
+  //             _speak("Here's what i found for " + searchtext);
+  //           }
+  //           setCards();
+  //         }),
+  //       );
+  //       _isListening = false;
+  //     } else {
+  //       setState(() {
+  //         _isListening = false;
+  //       });
+  //       _speech.stop();
+  //     }
+  //   }
+  // }
+
+  // void _listenG() async {
+  //   if (!_isListening) {
+  //     bool available = await _speechG.initialize(
+  //       onStatus: (val) => print('onStatus: $val'),
+  //       onError: (val) => print('onStatus: $val'),
+  //     );
+  //     if (available) {
+  //       setState(() {
+  //         _isListening = true;
+  //       });
+  //       _speechG.listen(
+  //         onResult: (val) => setState(() {
+  //           searchtext = val.recognizedWords;
+  //           if (val.finalResult) {
+  //             _speak("Here's what i found for " + searchtext);
+  //           }
+  //         }),
+  //       );
+  //     } else {
+  //       setState(() {
+  //         _isListening = false;
+  //       });
+  //       _speechG.stop();
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -128,36 +225,36 @@ class _GuideScreenState extends State<GuideScreen> {
                           setCards();
                         },
                         decoration: new InputDecoration(
-                            labelText: langs[lang]["guideps"]["search"],
-                            fillColor: Colors.white,
-                            border: new OutlineInputBorder(
-                              borderRadius: new BorderRadius.circular(25.0),
-                              borderSide: new BorderSide(),
-                            ),
-                            prefixIcon: Padding(
-                              padding: EdgeInsets.all(2),
-                              child: Icon(Icons.search),
-                            ),
-                            suffixIcon: Padding(
-                              padding: EdgeInsets.all(2),
-                              child: AvatarGlow(
-                                animate: _isListening,
-                                glowColor: Theme.of(context).primaryColor,
-                                endRadius: 2,
-                                duration: const Duration(milliseconds: 2000),
-                                repeatPauseDuration:
-                                    const Duration(milliseconds: 100),
-                                repeat: true,
-                                child: FloatingActionButton(
-                                  onPressed: _listen,
-                                  child: Icon(_isListening
-                                      ? Icons.mic
-                                      : Icons.mic_none),
-                                ),
-                              ),
-                            )
-                            //fillColor: Colors.green
-                            ),
+                          labelText: langs[lang]["guideps"]["search"],
+                          fillColor: Colors.white,
+                          border: new OutlineInputBorder(
+                            borderRadius: new BorderRadius.circular(25.0),
+                            borderSide: new BorderSide(),
+                          ),
+                          prefixIcon: Padding(
+                            padding: EdgeInsets.all(2),
+                            child: Icon(Icons.search),
+                          ),
+                          // suffixIcon: Padding(
+                          //   padding: EdgeInsets.all(2),
+                          //   child: AvatarGlow(
+                          //     animate: _isListening,
+                          //     glowColor: Theme.of(context).primaryColor,
+                          //     endRadius: 2,
+                          //     duration: const Duration(milliseconds: 2000),
+                          //     repeatPauseDuration:
+                          //         const Duration(milliseconds: 100),
+                          //     repeat: true,
+                          //     child: FloatingActionButton(
+                          //       onPressed: _listen,
+                          //       child: Icon(_isListening
+                          //           ? Icons.mic
+                          //           : Icons.mic_none),
+                          //     ),
+                          //   ),
+                          // )
+                          //fillColor: Colors.green
+                        ),
                       ),
                     ),
                     SizedBox(
