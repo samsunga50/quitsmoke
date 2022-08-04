@@ -61,18 +61,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false, //to avoid overflow
       appBar: buildAppBar(context),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
+            SizedBox(
+              height: 50,
+            ),
             TextFormField(
               controller: controllerday,
               onChanged: (value) => dailyCigarattes = int.parse(value),
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: new InputDecoration(
                 labelText: langs[lang]["welcome"]["howmanyperday"],
-                fillColor: Colors.white,
+                fillColor: Color.fromARGB(255, 255, 255, 255),
                 border: new OutlineInputBorder(
                   borderRadius: new BorderRadius.circular(25.0),
                   borderSide: new BorderSide(),
@@ -82,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SizedBox(
-              height: getProportionateScreenHeight(15),
+              height: getProportionateScreenHeight(55),
             ),
             TextFormField(
               controller: controllercost,
@@ -91,7 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: new InputDecoration(
                 labelText: langs[lang]["welcome"]["howmuchpercigcost"],
-                fillColor: Colors.white,
+                fillColor: Color.fromARGB(255, 255, 255, 255),
                 border: new OutlineInputBorder(
                   borderRadius: new BorderRadius.circular(25.0),
                   borderSide: new BorderSide(),
@@ -100,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SizedBox(
-              height: getProportionateScreenHeight(15),
+              height: getProportionateScreenHeight(50),
             ),
             FittedBox(
               child: DropdownButton<String>(
@@ -125,7 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             SizedBox(
-              height: getProportionateScreenHeight(15),
+              height: getProportionateScreenHeight(50), //bottomboxfromabove
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -142,25 +146,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SizedBox(
                   width: 10,
                 ),
-                OutlinedButton(
+                OutlineButton(
+                  padding: EdgeInsets.symmetric(horizontal: 50),
                   onPressed: () => _pickDate(context),
                   child: Text(
                     "${langs[lang]["settings"]["change"]}",
                     textAlign: TextAlign.center,
                   ),
+                  borderSide: BorderSide(
+                      color: Color.fromARGB(255, 113, 113, 113).withAlpha(200),
+                      width: 2), //changebutton
                 ),
               ],
             ),
             Expanded(
               child: Text(""),
             ),
-            OutlinedButton(
+            OutlineButton(
+              padding: EdgeInsets.symmetric(horizontal: 50), //savebutton
               onPressed: () => saveData(),
               child: Text(langs[lang]["settings"]["save"]),
+              borderSide: BorderSide(
+                  color: Color.fromARGB(255, 113, 113, 113).withAlpha(200),
+                  width: 2),
             )
           ],
         ),
       ),
+      backgroundColor: Color.fromARGB(255, 225, 225, 240),
     );
   }
 
@@ -188,31 +201,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
   AppBar buildAppBar(BuildContext context) {
     SizeConfig().init(context);
     return AppBar(
-      leading: new IconButton(
-        icon: new Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Hero(
-            tag: "settings",
-            child: Icon(
-              Icons.settings,
-              color: Colors.black,
-              size: getProportionateScreenWidth(26),
+        leading: new IconButton(
+          icon: new Icon(Icons.arrow_back, color: Color.fromARGB(255, 0, 0, 0)),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Hero(
+              tag: "settings",
+              child: Icon(
+                Icons.settings,
+                color: Color.fromARGB(255, 0, 0, 0),
+                size: getProportionateScreenWidth(26),
+              ),
             ),
-          ),
-          SizedBox(
-            width: 5,
-          ),
-          Text(
-            "${langs[lang]["home"]["settings"]}",
-            style: Theme.of(context).textTheme.bodyText2.copyWith(
-                color: Colors.black, fontSize: getProportionateScreenWidth(26)),
-          )
-        ],
-      ),
-    );
+            SizedBox(
+              width: 5,
+            ),
+            Text(
+              "${langs[lang]["home"]["settings"]}",
+              style: Theme.of(context).textTheme.bodyText2.copyWith(
+                  color: Colors.black,
+                  fontSize: getProportionateScreenWidth(26)),
+            )
+          ],
+        ),
+        backgroundColor: Color.fromARGB(255, 165, 165, 185));
   }
 }

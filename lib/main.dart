@@ -2,13 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:quitsmoke/notification_manager.dart';
 import 'package:quitsmoke/screens/splash_screen.dart';
 import 'package:quitsmoke/theme.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:alan_voice/alan_voice.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +21,7 @@ void main() async {
 
   Intl.defaultLocale = Platform.localeName;
   initializeDateFormatting(Platform.localeName, null);
+  NotificationManager.initializeLocalNotifiations();
 
   runApp(MyApp());
 
@@ -43,14 +48,15 @@ class MyApp extends StatelessWidget {
 
         if (!currentFocus.hasPrimaryFocus &&
             currentFocus.focusedChild != null) {
-          FocusManager.instance.primaryFocus?.unfocus();
+          FocusManager.instance.primaryFocus.unfocus();
         }
       },
       child: MaterialApp(
         builder: (context, child) {
           return MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaleFactor: 1),
-              child: child);
+            data: MediaQuery.of(context).copyWith(textScaleFactor: 1),
+            child: child,
+          );
         },
         debugShowCheckedModeBanner: false,
         title: 'Quit Smoking',

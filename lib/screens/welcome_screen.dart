@@ -229,12 +229,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   SizedBox(
                     width: 10,
                   ),
-                  OutlinedButton(
+                  OutlineButton(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
                     onPressed: () => _pickDate(context),
                     child: Text(
                       "${langs[lang]["settings"]["change"]}",
                       textAlign: TextAlign.center,
                     ),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).primaryColor, width: 2),
                   ),
                 ],
               ),

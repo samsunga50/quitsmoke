@@ -4,7 +4,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:quitsmoke/constants.dart';
 import 'package:quitsmoke/size_config.dart';
 import 'package:quitsmoke/static/lang.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
 class GuideViewScreen extends StatefulWidget {
   GuideViewScreen({Key key, this.id, this.lang}) : super(key: key);
@@ -23,16 +22,6 @@ class _GuideViewScreenState extends State<GuideViewScreen> {
     content = actual["content"];
     print(content.length);
     super.initState();
-  }
-
-  // speak function
-  final FlutterTts flutterTts = FlutterTts();
-  Future _speak(String hell) async {
-    await flutterTts.setVolume(1.0);
-    //await print("pressed");
-    //await print(content[1]["text"].toString());
-    //await flutterTts.speak(content[1]["text"].toString());
-    await flutterTts.speak(hell);
   }
 
   ClipPath buildHeader(BuildContext context) {
@@ -87,10 +76,7 @@ class _GuideViewScreenState extends State<GuideViewScreen> {
         title: Text(actual["title"]),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => {
-            flutterTts.stop(),
-            Navigator.of(context).pop(),
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SingleChildScrollView(
@@ -128,14 +114,6 @@ class _GuideViewScreenState extends State<GuideViewScreen> {
                 .bodyText2
                 .copyWith(fontSize: getProportionateScreenWidth(26)),
             textAlign: TextAlign.left,
-          ),
-          // speak button
-          IconButton(
-            icon: const Icon(Icons.volume_up),
-            onPressed: () => {
-              //flutterTts.speak("stop smoking"),
-              _speak("$text"),
-            },
           ),
           new Divider(
             color: Colors.grey,

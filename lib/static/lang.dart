@@ -915,7 +915,7 @@ Restlessness
     "guideps": {
       "guideto": "Your guide to\nQuit Smoking",
       "guides": "Guides",
-      "search": "Shake to talk"
+      "search": "Search"
     },
     "home": {
       "wallet": "Wallet",

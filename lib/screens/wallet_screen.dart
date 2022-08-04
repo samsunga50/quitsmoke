@@ -3,14 +3,18 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:quitsmoke/comps/cigaratte.dart';
 import 'package:quitsmoke/comps/getlang.dart';
 import 'package:quitsmoke/constants.dart';
+import 'package:quitsmoke/screens/home_screen.dart';
 import 'package:quitsmoke/static/lang.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:alan_voice/alan_voice.dart';
 
 import '../size_config.dart';
 
@@ -24,8 +28,23 @@ class WalletScreen extends StatefulWidget {
 
 class _WalletScreenState extends State<WalletScreen> {
   String lang = "en";
+  Cigaratte cigaraManager;
   List<Transaction> trlist = [];
   final scaffoldState = GlobalKey<ScaffoldState>();
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final amountController = TextEditingController();
+
+  // Future<void> loadData() async {
+  //   SharedPreferences pref = await SharedPreferences.getInstance();
+
+  //   currency = pref.getString("currency");
+
+  //  cigaraManager = Cigaratte(
+  //      dailyCigarattes: pref.getInt("dailycigarattes"),
+  //       pricePerCigaratte: pref.getDouble("pricePerCigaratte"),
+  //     startDate: DateTime.parse(pref.getString("startTime")));
+  // }
 
   double _amountofmoney = 0;
   String _tstitle = "";
@@ -53,9 +72,59 @@ class _WalletScreenState extends State<WalletScreen> {
     setState(() {});
   }
 
+  //dialogue box
+  // showAlertDialog(BuildContext context) async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //  bool isFirstLoaded = prefs.getBool("");
+  //  if (isFirstLoaded == null) {
+  //    showDialog(
+  //       context: context,
+  //       builder: (BuildContext context) {
+  //        AlertDialog alert = AlertDialog();
+  //      return AlertDialog(
+  //         title: Text("Title: Reset Balance"),
+  //      content: Text(
+  //         "If you want to quit smoking, be honest with yourself first!"),
+  //   actions: <Widget>[
+  //     FlatButton(
+  //       child: Text(
+  //         "${langs[lang]["home"]["reset"]}",
+  //        style: TextStyle(color: Colors.red),
+  //      ),
+  //     onPressed: () async {
+  //      Navigator.of(context).pop();
+  //     SharedPreferences pref =
+  //         await SharedPreferences.getInstance();
+  //     pref.setString(
+  //          "startTime", DateTime.now().toIso8601String());
+  //      loadData();
+  //    },
+  //  ),
+  //     FlatButton(
+  //    child: Text(
+  //      "${langs[lang]["home"]["cancel"]}",
+  //   ),
+  //   onPressed: () {
+  //    Navigator.of(context).pop();
+  //   },
+  //  ),
+  //     ],
+  //  );
+  // show the dialog
+  //          showDialog(
+  //        context: context,
+  //        builder: (BuildContext context) {
+  //         return alert;
+  //     },
+  //   );
+  //  });
+  //  }
+  // }
+
   _addTransaction(
       {DateTime date, double price, String title, String description}) {
     if (price > currentBalance) return;
+
     trlist.insert(
         0,
         Transaction(
@@ -82,6 +151,7 @@ class _WalletScreenState extends State<WalletScreen> {
   Timer statetimer;
   @override
   void initState() {
+    // loadData();
     lang = getLang();
     super.initState();
 
@@ -89,11 +159,42 @@ class _WalletScreenState extends State<WalletScreen> {
     statetimer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {});
     });
+    setupAlan();
+  }
+
+  setupAlan() {
+    //adding alan ai button
+    AlanVoice.addButton(
+        "6a951295d713b86d68f0252cf4476c392e956eca572e1d8b807a3e2338fdd0dc/stage",
+        buttonAlign: AlanVoice.BUTTON_ALIGN_RIGHT);
+
+    //Handling commands from ALan Studio
+    AlanVoice.onCommand.add(((command) => _handleCommand(command.data)));
+  }
+
+  void _handleCommand(Map<String, dynamic> command) {
+    switch (command["command"]) {
+      case "details":
+        _details = !_details;
+        break;
+      case "hide":
+        !(_details = !_details);
+        break;
+      case "return":
+        Navigator.of(context).pop();
+        break;
+      default:
+        debugPrint("Unknown Command");
+        break;
+    }
   }
 
   @override
   void dispose() {
     statetimer.cancel();
+    titleController.dispose();
+    descriptionController.dispose();
+    amountController.dispose();
     super.dispose();
   }
 
@@ -103,78 +204,97 @@ class _WalletScreenState extends State<WalletScreen> {
     SizeConfig().init(context);
     return Scaffold(
       key: scaffoldState,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          if (!_sheetopen)
-            scaffoldState.currentState.showBottomSheet((context) => Container(
-                  padding: EdgeInsets.all(15),
-                  color: Colors.white,
-                  height: getProportionateScreenHeight(340),
-                  width: double.infinity,
-                  child: Column(children: [
-                    Text(
-                      "${langs[lang]["wallet"]["newtransaction"]}",
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline4
-                          .copyWith(fontSize: getProportionateScreenWidth(22)),
-                    ),
-                    TextField(
-                      onChanged: (value) => _tstitle = value,
-                      decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "${langs[lang]["wallet"]["title"]}"),
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline4
-                          .copyWith(fontSize: getProportionateScreenWidth(22)),
-                    ),
-                    TextField(
-                      onChanged: (value) => _tsdescription = value,
-                      decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "${langs[lang]["wallet"]["description"]}"),
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline4
-                          .copyWith(fontSize: getProportionateScreenWidth(22)),
-                    ),
-                    TextField(
-                      onChanged: (value) =>
-                          _amountofmoney = double.parse(value),
-                      keyboardType:
-                          TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "${langs[lang]["wallet"]["amount"]}"),
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline4
-                          .copyWith(fontSize: getProportionateScreenWidth(22)),
-                    ),
-                    ElevatedButton(
-                      style: TextButton.styleFrom(
-                          textStyle: const TextStyle(fontSize: 20),
-                          padding: EdgeInsets.all(8)),
-                      child: Text("${langs[lang]["wallet"]["add"]}"),
-                      onPressed: () {
-                        _sheetopen = false;
-                        _addTransaction(
-                            date: DateTime.now(),
-                            price: _amountofmoney,
-                            title: _tstitle,
-                            description: _tsdescription);
-                        Navigator.pop(context);
-                      },
-                    )
-                  ]),
-                ));
-          else
-            Navigator.pop(context);
-          _sheetopen = !_sheetopen;
-        },
-        child: Icon(Icons.add, color: Colors.green),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(left: 40),
+        child: Row(
+          children: [
+            FloatingActionButton(
+              onPressed: () {
+                if (!_sheetopen)
+                  scaffoldState.currentState.showBottomSheet((context) =>
+                      Container(
+                        padding: EdgeInsets.all(15),
+                        /*wishcanvas*/
+                        color: Color.fromARGB(255, 255, 255, 255),
+                        height: getProportionateScreenHeight(340),
+                        width: double.infinity,
+                        child: Column(children: [
+                          Text(
+                            "${langs[lang]["wallet"]["newtransaction"]}",
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline4
+                                .copyWith(
+                                    fontSize: getProportionateScreenWidth(22)),
+                          ),
+                          TextField(
+                            controller: titleController,
+                            onChanged: (value) => _tstitle = value,
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "${langs[lang]["wallet"]["title"]}"),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline4
+                                .copyWith(
+                                    fontSize: getProportionateScreenWidth(22)),
+                          ),
+                          TextField(
+                            controller: descriptionController,
+                            onChanged: (value) => _tsdescription = value,
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText:
+                                    "${langs[lang]["wallet"]["description"]}"),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline4
+                                .copyWith(
+                                    fontSize: getProportionateScreenWidth(22)),
+                          ),
+                          TextField(
+                            controller: amountController,
+                            onChanged: (value) =>
+                                _amountofmoney = double.parse(value),
+                            keyboardType:
+                                TextInputType.numberWithOptions(decimal: true),
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "${langs[lang]["wallet"]["amount"]}"),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headline4
+                                .copyWith(
+                                    fontSize: getProportionateScreenWidth(22)),
+                          ),
+                          ElevatedButton(
+                            style: TextButton.styleFrom(
+                                textStyle: const TextStyle(fontSize: 20),
+                                padding: EdgeInsets.all(8)),
+                            child: Text("${langs[lang]["wallet"]["add"]}"),
+                            onPressed: () {
+                              _sheetopen = false;
+                              _addTransaction(
+                                  date: DateTime.now(),
+                                  price: _amountofmoney,
+                                  title: _tstitle,
+                                  description: _tsdescription);
+                              Navigator.pop(context);
+                            },
+                          )
+                        ]),
+                      ));
+                else
+                  Navigator.pop(context);
+                _sheetopen = !_sheetopen;
+              },
+              child: Icon(Icons.add,
+                  color: Color.fromARGB(255, 0, 0, 0)), //tochange
+            ),
+          ],
+        ),
       ),
+
       appBar: buildAppBar(context),
       body: SizedBox(
         width: double.infinity,
@@ -190,8 +310,9 @@ class _WalletScreenState extends State<WalletScreen> {
                   Text(
                     "${langs[lang]["wallet"]["balance"]}",
                     style: Theme.of(context).textTheme.headline4.copyWith(
-                        color: Colors.white.withAlpha(240),
-                        fontWeight: FontWeight.w300),
+                        color: Color.fromARGB(255, 255, 255, 255)
+                            .withAlpha(240), //balancecolor
+                        fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   Padding(
@@ -199,7 +320,8 @@ class _WalletScreenState extends State<WalletScreen> {
                     child: AutoSizeText(
                       "${NumberFormat.currency(symbol: currency).format(currentBalance)}",
                       style: Theme.of(context).textTheme.headline4.copyWith(
-                          color: Colors.white,
+                          color: Color.fromARGB(
+                              255, 255, 255, 255), //currencycolor
                           fontSize: getProportionateScreenWidth(42)),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -214,7 +336,9 @@ class _WalletScreenState extends State<WalletScreen> {
                                   .textTheme
                                   .headline4
                                   .copyWith(
-                                      color: Colors.white.withAlpha(200),
+                                      color: Color.fromARGB(
+                                              255, 255, 255, 255) //daily
+                                          .withAlpha(200),
                                       fontWeight: FontWeight.w300,
                                       fontSize:
                                           getProportionateScreenWidth(22)),
@@ -226,7 +350,9 @@ class _WalletScreenState extends State<WalletScreen> {
                                   .textTheme
                                   .headline4
                                   .copyWith(
-                                      color: Colors.white.withAlpha(200),
+                                      color: Color.fromARGB(
+                                              255, 255, 255, 255) //weekly
+                                          .withAlpha(200),
                                       fontWeight: FontWeight.w300,
                                       fontSize:
                                           getProportionateScreenWidth(22)),
@@ -238,7 +364,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                   .textTheme
                                   .headline4
                                   .copyWith(
-                                      color: Colors.white.withAlpha(200),
+                                      color:
+                                          Colors.white.withAlpha(200), //monthly
                                       fontWeight: FontWeight.w300,
                                       fontSize:
                                           getProportionateScreenWidth(22)),
@@ -250,7 +377,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                   .textTheme
                                   .headline4
                                   .copyWith(
-                                      color: Colors.white.withAlpha(200),
+                                      color:
+                                          Colors.white.withAlpha(200), //yearly
                                       fontWeight: FontWeight.w300,
                                       fontSize:
                                           getProportionateScreenWidth(22)),
@@ -259,33 +387,54 @@ class _WalletScreenState extends State<WalletScreen> {
                           ],
                         )
                       : SizedBox.shrink(),
-                  IconButton(
-                    icon: Icon(
-                      _details ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                      size: getProportionateScreenWidth(26),
-                    ),
-                    onPressed: () {
-                      _details = !_details;
-                      setState(() {});
-                    },
+                  // RaisedButton(onPressed: () {}),
+                  Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          //drop down icon button
+                          IconButton(
+                            icon: Icon(
+                              _details
+                                  ? Icons.arrow_drop_up
+                                  : Icons.arrow_drop_down,
+                              size: getProportionateScreenWidth(
+                                  50), //dropdownarrow
+                            ),
+                            onPressed: () {
+                              _details = !_details; //details under arrow
+                              setState(() {});
+                            },
+                          ),
+                          //    IconButton(
+                          //    icon: Icon(
+                          //      Icons.settings_backup_restore,
+                          //      size: getProportionateScreenWidth(32),
+                          //      color: Color.fromARGB(255, 255, 255, 255),
+                          //    ),
+                          // onPressed: () => showAlertDialog(context),
+                          //      ),
+                        ]),
                   )
                 ],
               ),
             ),
             SizedBox(
-              height: getProportionateScreenHeight(10),
+              height: getProportionateScreenHeight(30), //topcanvasheight
             ),
             Expanded(
               child: Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                    color: Colors.green[700],
+                    color:
+                        Color.fromARGB(255, 237, 237, 237), //bottomcanvascolor
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(22),
                         topRight: Radius.circular(22)),
                     boxShadow: [
                       BoxShadow(
-                          color: kShadowColor.withOpacity(.3),
+                          color: kShadowColor.withOpacity(.5),
                           blurRadius: 7,
                           offset: Offset(0, -3))
                     ]),
@@ -310,7 +459,9 @@ class _WalletScreenState extends State<WalletScreen> {
                                         Navigator.of(context).pop(true),
                                     child: Text(
                                       "${langs[lang]["misc"]["delete"]}",
-                                      style: TextStyle(color: Colors.red),
+                                      style: TextStyle(
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255)),
                                     )),
                                 TextButton(
                                   onPressed: () =>
@@ -328,12 +479,12 @@ class _WalletScreenState extends State<WalletScreen> {
                         margin: EdgeInsets.all(8),
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            color: Colors.red),
+                            color: Color.fromARGB(255, 255, 255, 255)),
                         child: Center(
                             child: Text(
                           "DELETE",
                           style: TextStyle(
-                              color: Colors.white,
+                              color: Color.fromARGB(255, 255, 255, 255),
                               fontSize: getProportionateScreenWidth(32)),
                         )),
                       ),
@@ -344,11 +495,12 @@ class _WalletScreenState extends State<WalletScreen> {
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                            color: Colors.green,
+                            color: Color.fromARGB(
+                                255, 113, 130, 255), //smalltransactionbox
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                  color: kShadowColor.withOpacity(.3),
+                                  color: kShadowColor.withOpacity(.5),
                                   blurRadius: 7,
                                   offset: Offset(3, 3))
                             ]),
@@ -367,9 +519,10 @@ class _WalletScreenState extends State<WalletScreen> {
                                       .textTheme
                                       .headline4
                                       .copyWith(
-                                          color: Colors.white,
+                                          color: Color.fromARGB(
+                                              255, 0, 0, 0), //title
                                           fontSize:
-                                              getProportionateScreenWidth(22)),
+                                              getProportionateScreenWidth(30)),
                                 ),
                                 if (item.description != null &&
                                     item.description != "" &&
@@ -380,10 +533,11 @@ class _WalletScreenState extends State<WalletScreen> {
                                         .textTheme
                                         .headline4
                                         .copyWith(
-                                            color: Colors.grey[100],
+                                            color: Color.fromARGB(
+                                                255, 0, 0, 0), //description
                                             fontSize:
                                                 getProportionateScreenWidth(
-                                                    16)),
+                                                    20)),
                                   ),
                                 Text(
                                   DateFormat.yMMMMEEEEd().format(item.time),
@@ -391,7 +545,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                       .textTheme
                                       .headline4
                                       .copyWith(
-                                          color: Colors.white70,
+                                          color: Color.fromARGB(
+                                              179, 0, 0, 0), //date
                                           fontSize:
                                               getProportionateScreenWidth(16)),
                                 ),
@@ -406,7 +561,8 @@ class _WalletScreenState extends State<WalletScreen> {
                                       .textTheme
                                       .headline4
                                       .copyWith(
-                                          color: Colors.white,
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255), //money
                                           fontSize:
                                               getProportionateScreenWidth(25)),
                                 ),
@@ -423,14 +579,16 @@ class _WalletScreenState extends State<WalletScreen> {
           ],
         ),
       ),
-      backgroundColor: Colors.green,
+
+      backgroundColor: Color.fromARGB(255, 59, 59, 224), //topcanvas color
     );
   }
 
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
       leading: new IconButton(
-        icon: new Icon(Icons.arrow_back, color: Colors.white),
+        icon: new Icon(Icons.arrow_back,
+            color: Color.fromARGB(255, 255, 255, 255)), //backarrow
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: Row(
@@ -441,7 +599,7 @@ class _WalletScreenState extends State<WalletScreen> {
             tag: "wallet",
             child: Icon(
               Icons.account_balance_wallet,
-              color: Colors.white,
+              color: Color.fromARGB(255, 255, 255, 255), //walleticoncolor
               size: getProportionateScreenWidth(26),
             ),
           ),
@@ -451,7 +609,8 @@ class _WalletScreenState extends State<WalletScreen> {
           Text(
             "${langs[lang]["home"]["wallet"]}",
             style: Theme.of(context).textTheme.bodyText2.copyWith(
-                color: Colors.white, fontSize: getProportionateScreenWidth(26)),
+                color: Color.fromARGB(255, 255, 255, 255), //pagetitle
+                fontSize: getProportionateScreenWidth(26)),
           )
         ],
       ),
